@@ -43,7 +43,7 @@ class RCON {
         if (!this.connected) {
             if (this.tls) {
                 await this.connectTLS()
-            }else{
+            } else {
                 await this.connect()
             }
         }
