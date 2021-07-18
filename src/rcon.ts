@@ -1,5 +1,6 @@
 import { createConnection, Socket } from 'net'
 import { connect as createConnectionTLS } from 'tls'
+
 import protocol from './protocol'
 import * as packets from './packet'
 
@@ -10,6 +11,8 @@ class RCON {
     encoding: packets.EncodingOptions
     timeout: number
     tls: boolean
+    allowSelfSigned: boolean
+
     connection!: Socket
     connected: boolean
     authenticated: boolean
@@ -25,6 +28,7 @@ class RCON {
         this.encoding = options.encoding || 'ascii'
         this.timeout = options.timeout || 1000
         this.tls = options.tls || false
+        this.allowSelfSigned = options.allowSelfSigned || false
 
         this.authenticated = false
         this.connected = false
@@ -106,7 +110,6 @@ class RCON {
 
             this.connection.once('error', reject)
             this.connection.setTimeout(this.timeout)
-
         })
     }
 
@@ -118,7 +121,7 @@ class RCON {
             this.connection = createConnectionTLS({
                 host: this.host,
                 port: this.port,
-                rejectUnauthorized: false
+                rejectUnauthorized: !this.allowSelfSigned
             }, () => {
                 if (this.connection) this.connection.removeListener('error', reject)
                 this.connected = true
@@ -127,7 +130,6 @@ class RCON {
 
             this.connection.once('error', reject)
             this.connection.setTimeout(this.timeout)
-
         })
     }
 
@@ -229,6 +231,7 @@ interface RCONOptions {
     encoding?: packets.EncodingOptions
     timeout?: number
     tls?: boolean
+    allowSelfSigned?: boolean
 }
 
 export default RCON
