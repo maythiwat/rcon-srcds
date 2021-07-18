@@ -23,7 +23,9 @@ These are the default values.
     port: 27015,                // Port
     maximumPacketSize: 0,       // Maximum packet bytes (0 = no limit)
     encoding: 'ascii',          // Packet encoding (ascii, utf8)
-    timeout: 1000               // in ms
+    timeout: 1000,              // in ms
+    tls: false,                 // RCON connection over TLS
+    allowSelfSigned: false      // (TLS Only) Allow Self-signed Certificate
 }
 ```
 
