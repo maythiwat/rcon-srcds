@@ -1,4 +1,5 @@
 import { createConnection, Socket } from 'net'
+import { connect as createConnectionTLS } from 'tls'
 import protocol from './protocol'
 import * as packets from './packet'
 
@@ -8,6 +9,7 @@ class RCON {
     maxPacketSize: number
     encoding: packets.EncodingOptions
     timeout: number
+    tls: boolean
     connection!: Socket
     connected: boolean
     authenticated: boolean
@@ -22,6 +24,7 @@ class RCON {
         this.maxPacketSize = options.maxPacketSize || 4096
         this.encoding = options.encoding || 'ascii'
         this.timeout = options.timeout || 1000
+        this.tls = options.tls || false
 
         this.authenticated = false
         this.connected = false
@@ -34,7 +37,11 @@ class RCON {
     async authenticate(password: string): Promise<boolean> {
 
         if (!this.connected) {
-            await this.connect()
+            if (this.tls) {
+                await this.connectTLS()
+            }else{
+                await this.connect()
+            }
         }
 
         return new Promise((resolve, reject) => {
@@ -91,6 +98,27 @@ class RCON {
             this.connection = createConnection({
                 host: this.host,
                 port: this.port
+            }, () => {
+                if (this.connection) this.connection.removeListener('error', reject)
+                this.connected = true
+                resolve()
+            })
+
+            this.connection.once('error', reject)
+            this.connection.setTimeout(this.timeout)
+
+        })
+    }
+
+    /**
+     * Creates a connection to the secure socket
+     */
+    private connectTLS(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.connection = createConnectionTLS({
+                host: this.host,
+                port: this.port,
+                rejectUnauthorized: false
             }, () => {
                 if (this.connection) this.connection.removeListener('error', reject)
                 this.connected = true
@@ -200,6 +228,7 @@ interface RCONOptions {
     maxPacketSize?: number
     encoding?: packets.EncodingOptions
     timeout?: number
+    tls?: boolean
 }
 
 export default RCON
